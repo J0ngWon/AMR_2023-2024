@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;F4_AMR&apos; to &apos;F4_AMR_test&apos;" description="Rename resource &apos;F4_AMR&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/F4_AMR" name="F4_AMR_test" stamp="1725089013877" updateReferences="true"/>
+</session>
