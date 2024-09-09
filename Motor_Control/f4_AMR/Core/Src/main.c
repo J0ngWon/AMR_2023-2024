@@ -339,9 +339,8 @@ int main(void)
 			topic_vx = (current_x - previous_current_x)*1000/dt;
 			topic_vy = (current_y - previous_current_y)*1000/dt;
 
+			printf("# %f %f %f %f %f %f | %f %f %f %f %f %f \n",topic_x,topic_y,topic_th,dt,topic_vx,topic_vy, motor_degree[0], motor_degree[1], motor_degree[2], motor_degree[3], motor_degree[4], motor_degree[5]);
 
-			printf("1 %f %f %f %f %f %f \n",topic_x,topic_y,topic_th,dt,topic_vx,topic_vy);
-			printf("2 %f %f %f %f %f %f \n", motor_degree[0], motor_degree[1], motor_degree[2], motor_degree[3], motor_degree[4], motor_degree[5]);
 			previous_car_angle = car_angle;
 			previous_current_x = current_x;
 			previous_current_y = current_y;
