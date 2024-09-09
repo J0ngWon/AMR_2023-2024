@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- MW-AHRS Driver -->
+  <node pkg="amr_ahrs" type="mw_ahrs_driver_node" name="mw_ahrs_driver_node" output="screen">
+    <param name="port" value="/dev/AMR_AHRS" />
+    <param name="frame_id" value="imu_link" />
+    <param name="version" value="v1" /> <!-- v1, v2 -->
+  </node>
+
+</launch>
