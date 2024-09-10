@@ -1,4 +1,4 @@
-<img src="https://capsule-render.vercel.app/api?type=rounded&color=282C34&height=160&section=header&text=Autonomous%20Mobile%20Robot&fontSize=40&fontColor=FFFFFF&desc=Powered%20by%20ROS&descAlignY=75&descAlign=50&animation=fadeIn&iconColor=00BCD4" />
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:00c6ff,100:0072ff&height=180&section=header&text=ROS%20AMR%20Robot&fontSize=45&fontAlignY=70&fontColor=ffffff" />
 
 
 
