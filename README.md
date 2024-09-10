@@ -2,3 +2,5 @@
 
 
 Deu-620-1 Lab Autonomous Mobile Robot Project
+![ROS Version](https://img.shields.io/badge/ROS-Noetic-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
