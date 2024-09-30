@@ -1,5 +1,6 @@
 import serial
 import time
+import math
 import threading
 import msvcrt
 import tkinter as tk
@@ -7,8 +8,10 @@ from tkinter import ttk
 
 ser = serial.Serial(port="COM8", baudrate=115200, timeout=None)
 
+buffer = b""
 goal_set = []
-
+odom_data = None
+pre_th = 0
 msg = """
 Control Your Robot!
 ---------------------------
@@ -57,7 +60,6 @@ angular = 0.0
 tk_linear = 0
 tk_angular = 0
 
-
 def send_command(command):
     command = "".join(map(str, command))
     command += "\n"
@@ -72,17 +74,31 @@ def send_data_thread():
 
 
 def receive_data_thread():
-    buffer = b""  # 데이터를 저장할 버퍼
+    global odom_data, buffer
+
     while True:
         if ser.in_waiting > 0:
-            buffer += ser.read()  # 데이터를 읽어서 버퍼에 추가
-            if b"\r\n" in buffer:  # 줄바꿈 문자가 있으면 출력
-                update_labels(buffer)  # GUI 업데이트
-                buffer = b""  # 버퍼 초기화
+            buffer = ser.read_until(b'\r\n')
 
+            received_data = buffer.decode('utf-8', errors='ignore').strip()
+
+            if '|' in received_data and '#' in received_data and received_data.count(' ') == 13:
+                try:
+                    odom_part, robot_arm_part = received_data[1:].split('|')
+
+                    odom_data = odom_part.strip().split()
+                    robot_data = robot_arm_part.strip().split()
+
+                    pub_odometry()
+
+                except UnicodeDecodeError as e:
+                    print((f"Decoding error: {e}"))
+
+            buffer = b''
 
 def get_key():
     global speed, turn, tk_linear, tk_angular, goal_set
+
     while True:
         key = msvcrt.getch().decode("utf-8")
         if key in change_speed:
@@ -124,12 +140,104 @@ def get_key():
             update_labels()  # GUI 업데이트
 
 
-def update_labels(buffer=None):
+class Point:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+
+class Quaternion:
+    def __init__(self, x, y, z, w):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.w = w
+
+
+class Pose:
+    def __init__(self, position, orientation):
+        self.position = position
+        self.orientation = orientation
+
+
+class Vector3:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+
+class Twist:
+    def __init__(self, linear, angular):
+        self.linear = linear
+        self.angular = angular
+
+def quaternion_from_euler(roll, pitch, yaw):
+    qx = math.sin(roll / 2) * math.cos(pitch / 2) * math.cos(yaw / 2) - math.cos(
+        roll / 2
+    ) * math.sin(pitch / 2) * math.sin(yaw / 2)
+    qy = math.cos(roll / 2) * math.sin(pitch / 2) * math.cos(yaw / 2) + math.sin(
+        roll / 2
+    ) * math.cos(pitch / 2) * math.sin(yaw / 2)
+    qz = math.cos(roll / 2) * math.cos(pitch / 2) * math.sin(yaw / 2) - math.sin(
+        roll / 2
+    ) * math.sin(pitch / 2) * math.cos(yaw / 2)
+    qw = math.cos(roll / 2) * math.cos(pitch / 2) * math.cos(yaw / 2) + math.sin(
+        roll / 2
+    ) * math.sin(pitch / 2) * math.sin(yaw / 2)
+    return (qx, qy, qz, qw)
+
+
+def pub_odometry():
+    global odom_data, pre_th
+
+    if odom_data != None:
+        odom_data_float = [float(val) if val != "nan" else 0.0 for val in odom_data]
+
+        # Odometry 메시지 생성 및 발행
+        x, y, th, dt, vx, vy = odom_data_float[:6]
+        vth = th - pre_th
+
+        quaternion = quaternion_from_euler(0, 0, th)
+
+        odom_pose = Pose(Point(x, y, 0.0), Quaternion(*quaternion))
+        odom_twist = Twist(Vector3(vx, vy, 0.0), Vector3(0.0, 0.0, vth * 1000 / dt))
+
+        pre_th = th
+
+        update_labels(
+            buffer,
+            pose={"position": odom_pose.position, "orientation": odom_pose.orientation},
+            twist={"linear": odom_twist.linear, "angular": odom_twist.angular}
+        )
+
+def update_labels(buffer=None, pose=None, twist=None):
     set_linear_label_var.set(f"set_linear: {speed:.6f}")
     set_angular_label_var.set(f"set_angular: {turn:.6f}")
     linear_label_var.set(f"linear: {tk_linear:.6f}")
     angular_label_var.set(f"angular: {tk_angular:.6f}")
     stm_label_var.set(f"STM: {buffer if buffer else b''}")
+
+    if pose:
+        pose_data_label_var.set(
+            f"Position({pose['position'].x:.6f}, {pose['position'].y:.6f}, {pose['position'].z:.6f})\n"
+            f"Orientation({pose['orientation'].x:.6f}, {pose['orientation'].y:.6f}, {pose['orientation'].z:.6f}, {pose['orientation'].w:.6f})"
+        )
+    else:
+        pose_data_label_var.set(
+            "Position(0.00, 0.00, 0.00), Orientation(0.00, 0.00, 0.00, 0.00)"
+        )
+
+    if twist:
+        twist_data_label_var.set(
+            f"Linear({twist['linear'].x:.6f}, {twist['linear'].y:.6f}, {twist['linear'].z:.6f})\n"
+            f"Angular({twist['angular'].x:.6f}, {twist['angular'].y:.6f}, {twist['angular'].z:.6f})"
+        )
+    else:
+        twist_data_label_var.set(
+            "Linear(0.00, 0.00, 0.00), Angular(0.00, 0.00, 0.00, 0.00)"
+        )
 
 
 if __name__ == "__main__":
@@ -146,6 +254,8 @@ if __name__ == "__main__":
     linear_label_var = tk.StringVar()
     angular_label_var = tk.StringVar()
     stm_label_var = tk.StringVar()
+    pose_data_label_var = tk.StringVar()
+    twist_data_label_var = tk.StringVar()
 
     # ttk 라벨 생성 및 배치
     set_linear_label = ttk.Label(root, textvariable=set_linear_label_var, style="Bold.TLabel")
@@ -162,6 +272,22 @@ if __name__ == "__main__":
 
     stm_label = ttk.Label(root, textvariable=stm_label_var, style="Bold.TLabel")
     stm_label.grid(row=2, column=0, padx=10, pady=10, columnspan=2, sticky="w")
+
+    pose_label = ttk.Label(root, text="POSE", style="Bold.TLabel")
+    pose_label.grid(row=3, column=0, padx=10, pady=10, columnspan=2, sticky="w")
+
+    pose_data_label = ttk.Label(
+        root, textvariable=pose_data_label_var, style="Bold.TLabel"
+    )
+    pose_data_label.grid(row=4, column=0, padx=10, pady=10, columnspan=2, sticky="w")
+
+    twist_label = ttk.Label(root, text="TWIST", style="Bold.TLabel")
+    twist_label.grid(row=3, column=1, padx=10, pady=10, columnspan=2, sticky="w")
+
+    pose_data_label = ttk.Label(
+        root, textvariable=twist_data_label_var, style="Bold.TLabel"
+    )
+    pose_data_label.grid(row=4, column=1, padx=10, pady=10, columnspan=2, sticky="w")
 
     # 초기 라벨 설정
     update_labels()
