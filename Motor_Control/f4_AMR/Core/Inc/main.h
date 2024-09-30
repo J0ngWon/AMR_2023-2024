@@ -104,8 +104,8 @@ void Error_Handler(void);
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
-#define SWO_Pin GPIO_PIN_3
-#define SWO_GPIO_Port GPIOB
+#define TIM_gripper_Pin GPIO_PIN_3
+#define TIM_gripper_GPIO_Port GPIOB
 #define TIM_wrist_var_Pin GPIO_PIN_4
 #define TIM_wrist_var_GPIO_Port GPIOB
 #define TIM_shoulder_Pin GPIO_PIN_6

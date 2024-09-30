@@ -49,6 +49,9 @@
 #define MOTOR5_MIN_ANGLE 0
 #define MOTOR5_MAX_ANGLE 180
 
+#define MOTOR6_MIN_ANGLE 10
+#define MOTOR6_MAX_ANGLE 73
+
 //#define MOTOR5_MIN_ANGLE 10
 //#define MOTOR5_MAX_ANGLE 72
 /* USER CODE END PTD */
@@ -268,6 +271,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
+
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -295,6 +299,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	HAL_GPIO_WritePin(GPIOA, shield_power_Pin, GPIO_PIN_SET);
 	HAL_TIM_Base_Start_IT(&htim2);
+	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
@@ -348,7 +353,7 @@ int main(void)
 			dt = time;
 
 			topic_x = delta_s/(dt / 1000.0);
-			topic_th += (car_angle - previous_car_angle);
+			topic_th = car_angle;
 
 			printf("# %f %f %f %f %f %f | %f %f %f %f %f %f \n",current_x,current_y,topic_th,dt,topic_x,topic_y, motor_degree[0], motor_degree[1], motor_degree[2], motor_degree[3], motor_degree[4], motor_degree[5]);
 
@@ -501,6 +506,10 @@ static void MX_TIM2_Init(void)
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
@@ -1047,7 +1056,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 				setMotorAngle(&htim3, TIM_CHANNEL_2, motor_degree[2], MOTOR3_MIN_ANGLE, MOTOR3_MAX_ANGLE);
 				setMotorAngle(&htim2, TIM_CHANNEL_3, motor_degree[3], MOTOR4_MIN_ANGLE, MOTOR4_MAX_ANGLE);
 				setMotorAngle(&htim3, TIM_CHANNEL_1, motor_degree[4], MOTOR5_MIN_ANGLE, MOTOR5_MAX_ANGLE);
-				//setMotorAngle(&htim3, TIM_CHANNEL_1, motor_degree[4], MOTOR5_MIN_ANGLE, MOTOR5_MAX_ANGLE);
+				setMotorAngle(&htim2, TIM_CHANNEL_2, motor_degree[5], MOTOR6_MIN_ANGLE, MOTOR6_MAX_ANGLE);
 			}
 
 			//reset huart2 buffer

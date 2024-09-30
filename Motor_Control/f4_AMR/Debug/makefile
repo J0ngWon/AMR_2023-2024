@@ -1,6 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (11.3.rel1)
+# Toolchain: GNU Tools for STM32 (12.3.rel1)
 ################################################################################
 
 -include ../makefile.init
@@ -60,8 +60,8 @@ all: main-build
 main-build: f4_AMR.elf secondary-outputs
 
 # Tool invocations
-f4_AMR.elf f4_AMR.map: $(OBJS) $(USER_OBJS) C:\Users\admin\Desktop\stm32\f4_AMR\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "f4_AMR.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\admin\Desktop\stm32\f4_AMR\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="f4_AMR.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+f4_AMR.elf f4_AMR.map: $(OBJS) $(USER_OBJS) E:\STM32ICUBE\LED_Blink\f4_AMR\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "f4_AMR.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\STM32ICUBE\LED_Blink\f4_AMR\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="f4_AMR.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
