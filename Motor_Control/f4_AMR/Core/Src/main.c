@@ -118,7 +118,20 @@ void setMotorAngle(TIM_HandleTypeDef *htim, uint32_t channel, uint8_t angle, uin
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/*********************** Debug ***********************/
 double test=0;
+double ttest=0;
+double tttest=0;
+
+double test_a=0;
+double ttest_a=0;
+double tttest_a=0;
+
+double test_final=0;
+
+double hodo_angle=0;
+double hodo_modula=0;
+double PI=3.14159265359;
 /*********************** encoder ***********************/
 int targetCount = 3172; //run one cycle
 volatile long long int encoderCount = 0;    //left
@@ -255,7 +268,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
-
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -325,7 +337,8 @@ int main(void)
 
 			delta_s = ((current_angle_r + current_angle) * rr) / 2;
 			delta_o = ((current_angle_r - current_angle) * rr) / ll;
-			input_delta_o = previous_car_angle + (delta_o / 2);
+			input_delta_o = previous_car_angle + (delta_o / 2); //Real
+
 
 			current_x = previous_current_x + cos((input_delta_o)) * delta_s;
 			current_y = previous_current_y + sin((input_delta_o)) * delta_s;
@@ -333,13 +346,11 @@ int main(void)
 
 			pid_delta_o = delta_o;
 			dt = time;
-			topic_x += (current_x - previous_current_x);
-			topic_y += (current_y - previous_current_y);
-			topic_th += (car_angle - previous_car_angle);
-			topic_vx = (current_x - previous_current_x)*1000/dt;
-			topic_vy = (current_y - previous_current_y)*1000/dt;
 
-			printf("# %f %f %f %f %f %f | %f %f %f %f %f %f \n",topic_x,topic_y,topic_th,dt,topic_vx,topic_vy, motor_degree[0], motor_degree[1], motor_degree[2], motor_degree[3], motor_degree[4], motor_degree[5]);
+			topic_x = delta_s/(dt / 1000.0);
+			topic_th += (car_angle - previous_car_angle);
+
+			printf("# %f %f %f %f %f %f | %f %f %f %f %f %f \n",current_x,current_y,topic_th,dt,topic_x,topic_y, motor_degree[0], motor_degree[1], motor_degree[2], motor_degree[3], motor_degree[4], motor_degree[5]);
 
 			previous_car_angle = car_angle;
 			previous_current_x = current_x;
@@ -972,7 +983,7 @@ uint32_t millis(void) {
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim->Instance == TIM2) {
-		if(msTicks>30){
+		if(msTicks>39){
 			msTicks = 0;
 		}
 	}

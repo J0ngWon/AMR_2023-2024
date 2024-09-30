@@ -6,7 +6,7 @@ import msvcrt
 import tkinter as tk
 from tkinter import ttk
 
-ser = serial.Serial(port="COM8", baudrate=115200, timeout=None)
+ser = serial.Serial(port="COM10", baudrate=115200, timeout=None)
 
 buffer = b""
 goal_set = []
