@@ -23,7 +23,7 @@ Moving around:
 i: move forward
 , (comma): move backward
 j: turn left
-l: turn right
+l: turn rightki
 u: forward-left
 o: forward-right
 m: backward-left
@@ -198,7 +198,7 @@ def pub_odometry():
         # Odometry 메시지 생성 및 발행
         x, y, th, dt, vx, vy = odom_data_float[:6]
         vth = th - pre_th
-
+        print(vth)
         quaternion = quaternion_from_euler(0, 0, th)
 
         odom_pose = Pose(Point(x, y, 0.0), Quaternion(*quaternion))
