@@ -836,14 +836,27 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+ * @brief  PWM을 통해 모터에 입력하는 함수
+ * @note   최대값 255 ->100%속도
+ * @param  pwm_input: 입력되는 값.
+ */
 void Pwm_Left(int pwm_input) {
 	htim5.Instance->CCR1 = pwm_input;
 }
-
+/**
+ * @brief  PWM을 통해 모터에 입력하는 함수
+ * @note   최대값 255 ->100%속도
+ * @param  pwm_input: 입력되는 값.
+ */
 void Pwm_Right(int pwm_input) {
 	htim5.Instance->CCR2 = pwm_input;
 }
-
+/**
+ * @brief  4채배 엔코더 펄스 카운터
+ * @note   1바퀴 = 3172=CPR*채배*기어비=13*4*61.
+ * @param  GPIO_Pin: Rising edge or Falling edge 가 발생한 핀
+ */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	/* Prevent unused argument(s) compilation warning */
 
