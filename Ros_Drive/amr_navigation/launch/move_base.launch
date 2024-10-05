@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Arguments -->
+  <arg name="local_planner" default="dwa" doc="Local planner can be either base or dwa"/>
+  <arg name="move_forward_only" default="false"/>
+  <arg name="map_file" default="$(find amr_navigation)/stage/620_1_lab.yaml"/>
+
+  <node pkg="map_server" type="map_server" name="map_server" args="$(arg map_file)"/>
+  
+  <!-- amcl -->
+  <include file="$(find amr_navigation)/launch/amcl.launch"/>
+  
+  <!-- move_base -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    <!-- base_local_planner parameter is set in the loaded parameter file depending on the local_planner argument -->
+    <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+    
+    <rosparam file="$(find amr_navigation)/move_base_config/dwa_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find amr_navigation)/move_base_config/move_base_params.yaml" command="load" />
+    
+    <!-- global costmap params -->
+    <rosparam file="$(find amr_navigation)/move_base_config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find amr_navigation)/move_base_config/costmap_global_params.yaml" command="load" />
+    
+    <!-- local costmap params -->
+    <rosparam file="$(find amr_navigation)/move_base_config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find amr_navigation)/move_base_config/costmap_local_params.yaml" command="load" />
+
+    <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)" />
+  </node>
+  
+  <!--rviz -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find amr_navigation)/rviz/rviz.rviz" />
+
+</launch>

@@ -1,0 +1,96 @@
+base_local_planner: dwa_local_planner/DWAPlannerROS
+DWAPlannerROS:
+# Robot Configuration Parameters
+  #로봇이 전진할 수 있는 최대 속도 (m/s)
+  #max_vel_x: 0.45
+  max_vel_x: 0.22
+  #로봇이 후진할 수 있는 최대 속도 (m/s)
+  min_vel_x: -0.22
+  
+  #로봇의 횡단 속도
+  max_vel_y: 0.0
+  min_vel_y: 0.0
+
+# The velocity when robot is moving in a straight line
+  #로봇이 직진할 때의 최대 속도
+  #max_vel_trans: 0.45
+  max_vel_trans: 0.22
+  #로봇이 직진할 때의 최소 속도
+  #min_vel_trans: 0.1
+  min_vel_trans: 0.11
+  #trans_stopped_vel: 0.1
+  
+  #최대 회전 속도 (rad/s)
+  #max_vel_theta: 0.15
+  #max_vel_theta: 2.75
+  max_vel_theta: 0.5
+  #최소 회전 속도
+  #in_vel_theta: 0.05
+  #min_vel_theta: 1.37
+  min_vel_theta: 0.2
+  
+  #max_rot_vel: 5.0
+  #min_rot_vel: 0.4
+  #rot_stopped_vel: 0.4
+
+  #x축 방향의 가속도 제한. 2.5
+  #acc_lim_x: 2.0
+  acc_lim_x: 2.5
+  #y축 방향의 가속도 제한.
+  acc_lim_y: 0.0
+  #회전 방향의 가속도 제한.
+  #acc_lim_theta: 0.15
+  #acc_lim_theta: 3.2
+  acc_lim_theta: 1.0
+  #Goal Tolerance Parametes
+  #목표 위치에 도달했는지를 판단하는 거리 오차 혀용범위(m)
+  xy_goal_tolerance: 0.05
+  #목표 방향에 정렬되었는지를 판다하는 각도 오차 허용범위(rad)
+  #yaw_goal_tolerance: 3.14159256350 -> 360
+  #yaw_goal_tolerance: 0.785398 -> 45
+  yaw_goal_tolerance: 0.17
+  #한 번 목표 위치 내에 들어오면, 목표가 달성된 것으로 간주하고 추가적인 위치 조정을 중지.
+  latch_xy_goal_tolerance: false
+
+# Forward Simulation Parameters
+  #시뮬레이션 시간(초), 이 시간 동안 경로를 시뮬레이션하여 최적의 경로를 선택.
+  #sim_time: 1.0
+  sim_time: 1.5
+  #x축 속도의 샘플 수
+  vx_samples: 20
+  #y축 속도의 샘풀 수
+  vy_samples: 0
+  #회전 속도의 샘플 수
+  vth_samples: 40
+  #컨트롤러의 작동 빈도
+  controller_frequency: 10.0
+
+# Trajectory Scoring Parameters
+  #경로 길이에 대한 비중, 더 짧은 경로를 선호함.
+  path_distance_bias: 32.0
+  #목표까지의 거리에 대한 비중, 목표에 더 가까운 경로를 선호함.
+  goal_distance_bias: 20.0
+  #장애물 근접성에 대한 스케일, 높을수록 장애물로부터 멀리 떨어지는 경로를 선호함.
+  occdist_scale: 0.02
+  #최적화를 위한 전방 포인트 거리
+  forward_point_distance: 0.325
+  #정지 시간 버퍼, 앉전 마진을 제공
+  stop_time_buffer: 0.2
+  #속도 스케일링을 위한 기준
+  scaling_speed: 0.25
+  #최대 속도 스케일링 계수.
+  max_scaling_factor: 0.2
+
+# Oscillation Prevention Parameters
+  #진동을 리셋하는 데 필요한 거리
+  oscillation_reset_dist: 0.05
+
+# Debugging
+  #경로 후보들을 포인트 클라우드로 게시할지 여부
+  publish_traj_pc : true
+  #비용 그리드를 포인트 클라우드로 게시할지 여부
+  publish_cost_grid_pc: true
+  
+  #global_frame_id: odom_combined
+  #global_frame_id: odom
+  #prune_plan: true

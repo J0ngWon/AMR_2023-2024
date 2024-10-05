@@ -5,6 +5,8 @@ import serial
 import time
 import threading
 import math
+import sys
+import select
 from std_msgs.msg import String, Float64MultiArray
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import JointState
@@ -17,7 +19,9 @@ ser = None
 
 tx_stm32_cmd_vel = ''
 tx_stm32_motor_degrees = ''
+tx_stm32_reset = ''
 
+pre_th = 0
 odom_data = None
 robot_data = '0'
 
@@ -81,23 +85,34 @@ def joint_states_callback(msg):
     #rospy.loginfo(f"Position: {motor_degrees}")
 
 def pub_odometry(odom_pub, tf_broadcaster):
-    global odom_data
+    global odom_data, pre_th
 
     if odom_data != None:
         odom_data_float = [float(val) if val != 'nan' else 0.0 for val in odom_data]
 
         # Odometry 메시지 생성 및 발행
         x, y, th, dt, vx, vy = odom_data_float[:6]
+
         quaternion = quaternion_from_euler(0, 0, th)
         odom_msg = Odometry()
         odom_msg.header.stamp = rospy.Time.now()
         odom_msg.header.frame_id = "odom"
         odom_msg.child_frame_id = "base_footprint"
         odom_msg.pose.pose = Pose(Point(x, y, 0.0), Quaternion(*quaternion))
-        odom_msg.twist.twist = Twist(Vector3(vx, vy, 0.0), Vector3(0.0, 0.0, th * 1000 / dt))
+        odom_msg.twist.twist = Twist(Vector3(vx, 0.0, 0.0), Vector3(0.0, 0.0, vy))
+        
+        odom_msg.pose.covariance = [0.1, 0, 0, 0, 0, 0,
+                                    0, 0.1, 0, 0, 0, 0,
+                                    0, 0, 0.1, 0, 0, 0,
+                                    0, 0, 0, 0.1, 0, 0,
+                                    0, 0, 0, 0, 0.1, 0,
+                                    0, 0, 0, 0, 0, 0.1]
+
         # Odometry 메시지 발행
         odom_pub.publish(odom_msg)
+
         # TF 발행
+        """
         tf_broadcaster.sendTransform(
             (x, y, 0),
             quaternion,
@@ -105,6 +120,7 @@ def pub_odometry(odom_pub, tf_broadcaster):
             "base_footprint",
             "odom"
         )
+        """
         
 def pub_braccio_state(braccio_state_pub):
     global robot_data
@@ -116,16 +132,18 @@ def pub_braccio_state(braccio_state_pub):
 def send_command(command):
     command += '\n'
     ser.write(command.encode())
-    time.sleep(0.025) #40HZ
+    time.sleep(0.05) #20HZ
 
 def send_data_thread():
-    global tx_stm32_cmd_vel, stx_tm32_motor_degrees
+    global tx_stm32_cmd_vel, stx_tm32_motor_degrees, tx_stm32_reset
+
     while not rospy.is_shutdown():
         try:
             send_command(tx_stm32_cmd_vel)
-            #tx_stm32_motor_degrees = '21.4835301.5708001.5708001.5708000.0000000.174533'
-            #tx_stm32_motor_degrees = '21.4835300.2617990.5235992.200000.0000000.174533'
             send_command(tx_stm32_motor_degrees)
+            if tx_stm32_reset == '3':
+                send_command(tx_stm32_reset)
+                tx_stm32_reset = ''
 
         except TimeoutError:
             rospy.logwarn("Timeout Error!!! When Send Data")
@@ -156,6 +174,17 @@ def receive_data_thread():
 
             buffer = b''  # 버퍼 초기화
 
+def keyboard_input_thread():
+    global tx_stm32_reset
+
+    while not rospy.is_shutdown():
+        # 비동기적으로 키 입력을 처리
+        if select.select([sys.stdin], [], [], 0)[0]:
+            key = sys.stdin.read(1)  # 한 글자만 읽음
+            if key == 'r':
+                print("RESET!")
+                tx_stm32_reset = '3'
+
 def main():
     rospy.init_node('stm32_serial', anonymous=True)
     
@@ -180,9 +209,13 @@ def main():
     # 수신 스레드 생성
     receive_thread = threading.Thread(target=receive_data_thread, daemon=True)
 
+    # 키보드 입력 스레드 생성
+    keyboard_thread = threading.Thread(target=keyboard_input_thread, daemon=True)
+
     # 스레드 시작
     send_thread.start()
     receive_thread.start()
+    keyboard_thread.start()
 
     # ROS 노드가 종료될 때까지 대기
     rate = rospy.Rate(20)  # 20Hz 주기로 odom 발행

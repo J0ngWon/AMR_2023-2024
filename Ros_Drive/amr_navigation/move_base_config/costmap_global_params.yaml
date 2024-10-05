@@ -1,0 +1,18 @@
+global_costmap:
+  #지도가 어떤 프레임에 상대적으로 정의될지
+  global_frame: "map"
+  #어떤 로봇의 프레임을 기준으로 할지
+  robot_base_frame: "base_footprint"
+  #지도가 얼마나 자주 갱신될지
+  update_frequency: 10.0
+  #지도가 얼마나 다른 노드에 게시할지
+  publish_frequency: 10.0
+  #데이터가 오래되었을 때 얼마나 오랫동안 유효할지 (초)
+  transform_tolerance: 0.5
+  #global 지도가 정적인지 동적인지 True: 로봇이 시작할 때 맵을 로드하고 이후에는 맵을 변경하지 않음.
+  static_map: true
+  #지도가 로봇을 중심으로 이동하면서 지속적으로 업데이트 되어야 하는지
+  #한 번 꺼보고 실험 해보기!!!!
+  rolling_window: false
+  obstacles_layes:
+    enabled: false

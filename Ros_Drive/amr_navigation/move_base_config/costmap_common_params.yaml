@@ -1,0 +1,18 @@
+#센서가 감지한 데이터 중에서 어떤 거리 이내의 데이터를 장애물로 감지할지 3.0
+obstacle_range: 3.0
+#지도에서 센서 데이터를 사용하여 공간을 "클리어" 하는데 사용되는 최대 거리 3.5
+raytrace_range: 3.5 #5.0
+
+footprint: [[-0.3, -0.2], [-0.3, 0.2], [0.3, 0.2], [0.3, -0.2]]
+#robot_radius: 0.3
+
+#장애물이 비용지도 상에서 얼마나 멀리까지 영향을 미칠지 결정하는 반경 (m) 0.5
+inflation_radius: 1.0
+#inflation_radius내의 비용을 얼마나 가파르게 증가시킬 것인지
+cost_scaling_factor: 3.0
+
+map_type: costmap #이게 멀까 터틀 보고 추가한것
+
+observation_sources: laser_scan_sensor
+#observation_sources: scan
+laser_scan_sensor: {sensor_frame: laser_link, data_type: LaserScan, topic: scan, marking: true, clearing: true}

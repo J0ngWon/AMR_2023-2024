@@ -2,9 +2,25 @@
 
 <launch>
   <!-- Launch nodes amr_urdf -->
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
-  <param name="robot_description" textfile="$(find robot_urdf)/urdf/robot.urdf" />
+  <arg name="use_tf" default="false"/>
+  <arg name="use_braccio" default="true"/>
+  
+  <group if="$(arg use_tf)">
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+      <param name="publish_frequency" type="double" value="50.0"/>
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+    <param name="robot_description" textfile="$(find amr_urdf)/urdf/robot.urdf" />
+  </group>
+  
+  <group if="$(arg use_braccio)">
+    <!-- MoveIt demo.launch 파일 포함 -->
+    <include file="$(find amr_braccio_moveit)/launch/demo.launch" />
+
+    <!-- Python 스크립트 노드 실행 -->
+    <node name="amr_braccio_ik" pkg="amr_braccio_ik" type="braccio_ik.py" respawn="false" output="screen" required="true">
+      <param name="wait_for_action_servers" value="true" />
+    </node>
+  </group>
 
   <!-- Launch nodes amr_rplidar -->
   <node name="rplidarNode"          pkg="amr_rplidar"  type="rplidarNode" output="screen">
@@ -27,9 +43,8 @@
     <param name="serial_port"         type="string" value="/dev/AMR_STM32"/>
     <param name="serial_baudrate"     type="int"    value="115200"/>
   
-  <!--
   <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
-    <param name="output_frame" value="odom"/>
+    <param name="output_frame" value="odom_combined"/>
     <param name="base_footprint_frame" value="base_footprint"/>
     <param name="freq" value="20.0"/>
     <param name="sensor_timeout" value="1.0"/>
@@ -38,8 +53,6 @@
     <param name="vo_used" value="true"/>
     <param name="debug" value="false"/>
     <param name="self_diagnose" value="false"/>
-    <param name="wheelodom_covariance" value="[0.1, 0, 0, 0, 0, 0, 0, 0, 0.1]"/>
   </node>
-  -->
-  
+
 </launch>

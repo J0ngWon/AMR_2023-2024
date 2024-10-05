@@ -354,6 +354,7 @@ int main(void)
 
 			topic_x = delta_s/(dt / 1000.0);
 			topic_th = car_angle;
+			topic_y=(car_angle-previous_car_angle)*1000/dt;//vth
 
 			printf("# %f %f %f %f %f %f | %f %f %f %f %f %f \n",current_x,current_y,topic_th,dt,topic_x,topic_y, motor_degree[0], motor_degree[1], motor_degree[2], motor_degree[3], motor_degree[4], motor_degree[5]);
 
@@ -1058,6 +1059,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 				setMotorAngle(&htim3, TIM_CHANNEL_1, motor_degree[4], MOTOR5_MIN_ANGLE, MOTOR5_MAX_ANGLE);
 				setMotorAngle(&htim2, TIM_CHANNEL_2, motor_degree[5], MOTOR6_MIN_ANGLE, MOTOR6_MAX_ANGLE);
 			}
+			else if (rx_buffer[0] == '3') {
+				NVIC_SystemReset();
+				test=1;
+			}
+
 
 			//reset huart2 buffer
 			rx_index = 0;
