@@ -30,6 +30,6 @@
   </node>
   
   <!--rviz -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find amr_navigation)/rviz/rviz.rviz" />
+  <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(find amr_navigation)/rviz/rviz.rviz" /-->
 
 </launch>

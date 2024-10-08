@@ -1,0 +1,14 @@
+<launch>
+    <!-- rosbridge_server 실행 -->
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
+
+    <!-- web_video_server 실행 -->
+    <node pkg="web_video_server" type="web_video_server" name="web_video_server" output="screen"/>
+
+    <!-- Python ROS 노드 실행 -->
+    <node pkg="amr_web" type="ros_web.py" name="ros_web" output="screen"/>
+
+    <!-- Python HTTP 서버 실행 -->
+    <node pkg="amr_web" type="start_http_server.py" name="http_server" output="screen"/>
+</launch>
+

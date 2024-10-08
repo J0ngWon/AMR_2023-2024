@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>620-1 AMR Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+    <style>
+        /* 공통 스타일 */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            max-width: 2500px; /* 전체 컨테이너 크기 조정 */
+            margin: 0 auto;
+        }
+
+        /* 회색 배경 상자 스타일 */
+        .box {
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* 비디오 영역 스타일 */
+        .video-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            max-width: 100%; /* 비디오 영역이 배경을 벗어나지 않도록 */
+            flex-wrap: wrap;
+        }
+        .video-container div {
+            margin: 5px;
+            flex: 1;
+            text-align: center;
+            max-width: 640px;
+        }
+
+        .video-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        /* 메시지 기록 및 시나리오 영역 스타일 */
+        .side-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start; /* 수직 정렬을 상단으로 설정 */
+        }
+
+        /* 메시지 기록 영역 */
+        #chat-container {
+            width: 130%; /* Message Log의 너비를 늘림 */
+            height: 250px; /* 높이를 조정하여 X, Y 입력 버튼과 같은 라인으로 맞춤 */
+            border: 1px solid #000;
+            overflow-y: scroll;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+        }
+
+        /* 시나리오 및 위치 입력 컨테이너 */
+        .state-input-container {
+            width: 32%;
+            padding-left: 20px;
+        }
+
+        /* 시나리오 영역과 입력 상자 스타일 */
+        .object-input-container, #state-container {
+            margin-bottom: 20px;
+        }
+
+        /* 버튼과 입력 스타일 */
+        input[type="text"], input[type="number"] {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+            width: calc(50% - 20px); /* 입력 필드 크기 조정 */
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* 일자 배치를 위한 스타일 */
+        .goal-inputs {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>620-1 AMR Monitoring</h1>
+
+        <!-- 비디오 이미지 영역 -->
+        <div class="box">
+            <div class="video-container">
+                <div>
+                    <h2>실시간 RGB 영상</h2>
+                    <img src="http://192.168.0.73:8080/stream?topic=/camera/rgb/image_color" alt="실시간 RGB 영상"/>
+                </div>
+                <div>
+                    <h2>객체 인식 영상</h2>
+                    <img src="http://192.168.0.73:8080/stream?topic=/camera/rgb/image_published" alt="객체 인식 영상"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메시지 기록 및 시나리오 영역 -->
+        <div class="box side-container">
+            <!-- 메시지 기록 -->
+            <div>
+                <h2>Message Log</h2>
+                <div id="chat-container"></div>
+            </div>
+
+            <!-- 시나리오 단계와 위치 입력 -->
+            <div class="state-input-container">
+                <!-- 객체 입력 영역 -->
+                <div class="object-input-container">
+                    <h2>객체 입력</h2>
+                    <label for="object-input">Object:</label>
+                    <input type="text" id="object-input" placeholder="Enter object name">
+                    <button onclick="startObject()">Start</button>
+                </div>
+
+                <!-- 현재 시나리오 단계 표시 영역 -->
+                <div id="state-container">
+                    <h2>현재 시나리오 단계</h2>
+                    <p id="current-state">대기 중...</p>
+                </div>
+
+                <!-- 사용자 입력 및 이동 버튼 -->
+                <div>
+                    <h2>Enter Goal Position</h2>
+                    <div class="goal-inputs">
+                        <label for="x">X:</label>
+                        <input type="number" id="x" step="0.1" placeholder="Enter X coordinate">
+                        <label for="y">Y:</label>
+                        <input type="number" id="y" step="0.1" placeholder="Enter Y coordinate">
+                        <button onclick="sendGoal()">GO!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // ROS와 연결 설정
+        var ros = new ROSLIB.Ros({
+            url: 'ws://192.168.0.73:9090'  // rosbridge_server의 주소와 포트
+        });
+
+        ros.on('connection', function() {
+            console.log('Connected to ROS bridge server.');
+        });
+
+        ros.on('error', function(error) {
+            console.log('Error connecting to ROS bridge server:', error);
+        });
+
+        ros.on('close', function() {
+            console.log('Connection to ROS bridge server closed.');
+        });
+
+        // MoveBaseGoal 메시지를 발행할 토픽 생성
+        var goalTopic = new ROSLIB.Topic({
+            ros: ros,
+            name: '/move_base_simple/goal',
+            messageType: 'geometry_msgs/PoseStamped'
+        });
+
+        // /detectnet/web_msg 토픽 구독
+        var chatContainer = document.getElementById('chat-container');
+
+        var webMsgTopic = new ROSLIB.Topic({
+            ros: ros,
+            name: '/detectnet/web_msg',
+            messageType: 'std_msgs/String'
+        });
+
+        var setObjectTopic = new ROSLIB.Topic({
+            ros: ros,
+            name: '/set_object',
+            messageType: 'std_msgs/String'
+        });
+
+        webMsgTopic.subscribe(function(message) {
+            // 채팅 메시지 요소 생성
+            var messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+            messageDiv.textContent = message.data;
+
+            // 채팅 컨테이너에 메시지 추가
+            chatContainer.appendChild(messageDiv);
+
+            // 자동으로 스크롤하여 최신 메시지를 표시
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+
+        // /detectnet/web_state 토픽 구독
+        var stateContainer = document.getElementById('current-state');
+
+        var webStateTopic = new ROSLIB.Topic({
+            ros: ros,
+            name: '/detectnet/web_state',
+            messageType: 'std_msgs/String'
+        });
+
+        webStateTopic.subscribe(function(message) {
+            // 현재 시나리오 단계 업데이트
+            stateContainer.textContent = message.data;
+        });
+
+        // 객체 입력의 Start 버튼 클릭 시 호출되는 함수
+        function startObject() {
+            var objectName = document.getElementById('object-input').value;
+
+            // String 메시지 생성
+            var message = new ROSLIB.Message({
+                data: objectName
+            });
+
+            // 메시지 발행
+            setObjectTopic.publish(message);
+    
+            document.getElementById('object-input').value = '';
+
+            console.log('Object input:', objectName);
+        }
+
+        // GO! 버튼 클릭 시 호출되는 함수
+        function sendGoal() {
+            var x = parseFloat(document.getElementById('x').value);
+            var y = parseFloat(document.getElementById('y').value);
+
+            if (isNaN(x) || isNaN(y)) {
+                console.log('Invalid input. Please enter numerical values for X and Y.');
+                return;
+            }
+
+            var goal = new ROSLIB.Message({
+                header: {
+                    frame_id: 'base_footprint',
+                    stamp: {
+                        secs: 0,
+                        nsecs: 0
+                    }
+                },
+                pose: {
+                    position: {
+                        x: x,
+                        y: y,
+                        z: 0
+                    },
+                    orientation: {
+                        x: 0,
+                        y: 0,
+                        z: 0,
+                        w: 1.0  // 회전 없이 직진
+                    }
+                }
+            });
+
+            goalTopic.publish(goal);
+
+            document.getElementById('x').value = '';
+            document.getElementById('y').value = '';
+
+            console.log('Sent goal: move to x = ' + x + ', y = ' + y);
+        }
+    </script>
+</body>
+</html>

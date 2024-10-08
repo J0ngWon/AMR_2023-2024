@@ -2,8 +2,8 @@
 
 <launch>
   <!-- Launch nodes amr_urdf -->
-  <arg name="use_tf" default="false"/>
-  <arg name="use_braccio" default="true"/>
+  <arg name="use_tf" default="true"/>
+  <arg name="use_braccio" default="false"/>
   
   <group if="$(arg use_tf)">
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />

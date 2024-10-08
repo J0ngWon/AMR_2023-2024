@@ -3,7 +3,7 @@
   <include file="$(find amr_braccio_moveit)/launch/demo.launch" />
 
   <!-- Python 스크립트 노드 실행 -->
-  <node name="amr_braccio_ik" pkg="amr_braccio_ik" type="test1.py" respawn="false" output="screen" required="true">
+  <node name="amr_braccio_ik" pkg="amr_braccio_ik" type="braccio_ik.py" respawn="false" output="screen" required="true">
     <param name="wait_for_action_servers" value="true" />
   </node>
 </launch>

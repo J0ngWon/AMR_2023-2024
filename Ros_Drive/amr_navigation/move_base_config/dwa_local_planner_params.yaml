@@ -2,8 +2,8 @@ base_local_planner: dwa_local_planner/DWAPlannerROS
 DWAPlannerROS:
 # Robot Configuration Parameters
   #로봇이 전진할 수 있는 최대 속도 (m/s)
-  #max_vel_x: 0.45
-  max_vel_x: 0.22
+  #max_vel_x: 0.22
+  max_vel_x: 0.40
   #로봇이 후진할 수 있는 최대 속도 (m/s)
   min_vel_x: -0.22
   
@@ -14,7 +14,7 @@ DWAPlannerROS:
 # The velocity when robot is moving in a straight line
   #로봇이 직진할 때의 최대 속도
   #max_vel_trans: 0.45
-  max_vel_trans: 0.22
+  max_vel_trans: 0.40
   #로봇이 직진할 때의 최소 속도
   #min_vel_trans: 0.1
   min_vel_trans: 0.11
@@ -48,7 +48,9 @@ DWAPlannerROS:
   #목표 방향에 정렬되었는지를 판다하는 각도 오차 허용범위(rad)
   #yaw_goal_tolerance: 3.14159256350 -> 360
   #yaw_goal_tolerance: 0.785398 -> 45
-  yaw_goal_tolerance: 0.17
+  # 0.17 -> 9.7도
+  # 0.34 -> 19.5도
+  yaw_goal_tolerance: 0.34
   #한 번 목표 위치 내에 들어오면, 목표가 달성된 것으로 간주하고 추가적인 위치 조정을 중지.
   latch_xy_goal_tolerance: false
 
