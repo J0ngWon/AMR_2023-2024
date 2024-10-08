@@ -123,17 +123,6 @@ void setMotorAngle(TIM_HandleTypeDef *htim, uint32_t channel, uint8_t angle, uin
 /* USER CODE BEGIN 0 */
 /*********************** Debug ***********************/
 double test=0;
-double ttest=0;
-double tttest=0;
-
-double test_a=0;
-double ttest_a=0;
-double tttest_a=0;
-
-double test_final=0;
-
-double hodo_angle=0;
-double hodo_modula=0;
 double PI=3.14159265359;
 /*********************** encoder ***********************/
 int targetCount = 3172; //run one cycle
@@ -222,7 +211,7 @@ char motor_buffer[49];
 float motor_degree[6];
 
 double topic_x = 0;
-double topic_y = 0;
+double topic_vth = 0;
 double topic_th = 0;
 double dt = 0;
 
@@ -324,8 +313,6 @@ int main(void)
 
 		motorControl(control_1, control_2);
 		motorControl_r(control_1_r, control_2_r);
-		//Pwm_Left(50);
-		//Pwm_Right(50);
 
 		Pwm_Left(abs(speed));
 		Pwm_Right(abs(speed_r));
@@ -354,9 +341,9 @@ int main(void)
 
 			topic_x = delta_s/(dt / 1000.0);
 			topic_th = car_angle;
-			topic_y=(car_angle-previous_car_angle)*1000/dt;//vth
+			topic_vth=(car_angle-previous_car_angle)*1000/dt;
 
-			printf("# %f %f %f %f %f %f | %f %f %f %f %f %f \n",current_x,current_y,topic_th,dt,topic_x,topic_y, motor_degree[0], motor_degree[1], motor_degree[2], motor_degree[3], motor_degree[4], motor_degree[5]);
+			printf("# %f %f %f %f %f %f | %f %f %f %f %f %f \n",current_x,current_y,topic_th,dt,topic_x,topic_vth, motor_degree[0], motor_degree[1], motor_degree[2], motor_degree[3], motor_degree[4], motor_degree[5]);
 
 			previous_car_angle = car_angle;
 			previous_current_x = current_x;
@@ -380,7 +367,6 @@ int main(void)
 			D_term_a = (error_a - 2 * previous_error_a + old_error_a) * Kd_a;
 			I_term_a = error_a * Ki_a;
 			pid_a = P_term_a + D_term_a + I_term_a;
-			test+=pid_a;
 			if (stop_flag == 0) {
 				speed = speed + pid - pid_a;
 				speed_r = speed_r + pid + pid_a;
@@ -850,14 +836,27 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+ * @brief  PWM을 통해 모터에 입력하는 함수
+ * @note   최대값 255 ->100%속도
+ * @param  pwm_input: 입력되는 값.
+ */
 void Pwm_Left(int pwm_input) {
 	htim5.Instance->CCR1 = pwm_input;
 }
-
+/**
+ * @brief  PWM을 통해 모터에 입력하는 함수
+ * @note   최대값 255 ->100%속도
+ * @param  pwm_input: 입력되는 값.
+ */
 void Pwm_Right(int pwm_input) {
 	htim5.Instance->CCR2 = pwm_input;
 }
-
+/**
+ * @brief  4채배 엔코더 펄스 카운터
+ * @note   1바퀴 = 3172=CPR*채배*기어비=13*4*61.
+ * @param  GPIO_Pin: Rising edge or Falling edge 가 발생한 핀
+ */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	/* Prevent unused argument(s) compilation warning */
 
@@ -904,7 +903,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	/* NOTE: This function Should not be modified, when the callback is needed,
 			 the HAL_GPIO_EXTI_Callback could be implemented in the user file */
 }
-
+/**
+ * @brief  모터 드라이버 제어 코드.
+ * @note   1,O ->Forward 0,1->Reverse
+ * @param  in1: 모터 드라이버 IN1
+ * @param  in2: 모터 드라이버 IN2
+ */
 void motorControl(int in1, int in2) {
 	GPIO_PinState state1=GPIO_PIN_RESET,state2=GPIO_PIN_RESET;
 	if(in1==1){
@@ -921,8 +925,14 @@ void motorControl(int in1, int in2) {
 	}
 	HAL_GPIO_WritePin(GPIOB, Left_IN1_Pin, state1);
 	HAL_GPIO_WritePin(GPIOC, Left_IN2_Pin, state2);
-}
 
+}
+/**
+ * @brief  모터 드라이버 제어 코드.
+ * @note   1,O ->Forward 0,1->Reverse
+ * @param  in1: 모터 드라이버 IN1
+ * @param  in2: 모터 드라이버 IN2
+ */
 void motorControl_r(int in1, int in2) {
 	GPIO_PinState state1=GPIO_PIN_RESET,state2=GPIO_PIN_RESET;
 	if(in1==1){
@@ -940,7 +950,10 @@ void motorControl_r(int in1, int in2) {
 	HAL_GPIO_WritePin(GPIOC, Right_IN1_Pin, state1);
  	HAL_GPIO_WritePin(GPIOC, Right_IN2_Pin, state2);
 }
-
+/**
+ * @brief  PWM 입력값 범위 제한 함수.
+ * @note   -180 ~ 180
+ */
 void check_pwm() {
 	if (speed >= 180) {
 		speed = 180;
@@ -948,7 +961,10 @@ void check_pwm() {
 		speed = -180;
 	}
 }
-
+/**
+ * @brief  PWM 입력값 범위 제한 함수.
+ * @note   -180 ~ 180
+ */
 void check_pwm_r() {
 	if (speed_r >= 180) {
 		speed_r = 180;
@@ -956,7 +972,10 @@ void check_pwm_r() {
 		speed_r = -180;
 	}
 }
-
+/**
+ * @brief  현재 입력 속도에 따라 회전 방향 변경함.
+ * @note   전역변수 control_x를 수정하는 방식임
+ */
 void check_move_state() {
 	if (speed >= 0) {
 		move_state = 0;
@@ -966,7 +985,10 @@ void check_move_state() {
 		control_1 = 1, control_2 = 0;
 	}
 }
-
+/**
+ * @brief  현재 입력 속도에 따라 회전 방향 변경함.
+ * @note   전역변수 control_x_r 를 수정하는 방식임
+ */
 void check_move_state_r() {
 	if (speed_r >= 0) {
 		move_state_r = 0;
@@ -976,7 +998,10 @@ void check_move_state_r() {
 		control_1_r = 0, control_2_r = 1;
 	}
 }
-
+/**
+ * @brief  선속도 각속도 변수전달 함수
+ * @note   0,0 주어진경우 정지
+ */
 void cmd_vel_calculate(void) {
 	cmd_vel_s = cmd_vel_x;
 	cmd_vel_th = cmd_vel_z;
@@ -986,11 +1011,17 @@ void cmd_vel_calculate(void) {
 		stop_flag = 0;
 	}
 }
-
+/**
+ * @brief  Arduino millis와 동일한 함수
+ * @note   stm32f4xx_it.c 참조
+ */
 uint32_t millis(void) {
 	return msTicks;
 }
-
+/**
+ * @brief  mstick 초기화함수
+ * @note   if(msTicks>변수) -->변수 수정하면 주기 바뀜
+ */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim->Instance == TIM2) {
 		if(msTicks>39){
@@ -1061,7 +1092,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 			}
 			else if (rx_buffer[0] == '3') {
 				NVIC_SystemReset();
-				test=1;
+
 			}
 
 
