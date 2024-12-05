@@ -41,7 +41,7 @@ class BraccioInverseKinematics:
             dE = -150   # 엔드 이펙터의 길이
 
             # Step 1: theta1 계산
-            theta1 = np.degrees(np.arctan2(x, y))
+            theta1 = np.degrees(np.arctan2(y, x))
 
             # Step 2: r, r', h 계산
             r = np.sqrt(x**2 + y**2)
@@ -58,18 +58,11 @@ class BraccioInverseKinematics:
             psi = np.arctan2(h, r_prime)
 
             # Step 4: theta2, theta3 계산
-            if x < 0.35:
-                theta2 = rho + psi - np.radians(80)
-            else:
-                theta2 = rho + psi - np.radians(96)
+           theta2 = rho + psi - np.radians(90)
 
             theta3 = np.pi - phi
 
-            # Step 5: 조건에 따라 theta4 계산
-            if x < 0.35:
-                theta4 = (theta2 + theta3) - np.radians(70)  
-            else:
-                theta4 = (theta2 + theta3)
+            theta4 = (theta2 + theta3) - np.radians(90)  
 
             # Step 6: theta5 계산
             theta5 = 180
